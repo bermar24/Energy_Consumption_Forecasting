@@ -5,7 +5,9 @@ from sklearn.model_selection import train_test_split
 import matplotlib.pyplot as plt
 
 # Import DateFrame electricity_market_dataset Frankfurt
-emd_df = pd.read_csv("electricity_market_dataset.csv")
+# Electricity Market Dataset for Long-Term Forecasting (01/2018–12/2024)
+# https://www.kaggle.com/datasets/datasetengineer/electricity-market-dataset
+emd_df = pd.read_csv("Datas/electricity_market_dataset.csv")
 emd_df['Timestamp'] = pd.to_datetime(emd_df['Timestamp'], errors='coerce')
 emd_df = emd_df.drop(columns=['Renewable_Investment_Costs',
        'Fossil_Fuel_Costs', 'Electricity_Export_Prices', 'Market_Elasticity',
@@ -17,16 +19,17 @@ emd_df = emd_df.drop(columns=['Renewable_Investment_Costs',
        'Project_Risk_Analysis', 'Investment_Feasibility'])
 # print(emd_df.columns)
 
-# Import DateFrame open-meteo Historical data Frankfurt
-om_df = pd.read_csv("open-meteo-50.09N8.65E117m.csv")
+# Import DateFrame open-meteo Historical data Frankfurt (01/2018–12/2024)
+# https://open-meteo.com/en/docs#hourly=temperature_2m,precipitation_probability
+om_df = pd.read_csv("Datas/open-meteo-50.09N8.65E117m.csv")
 om_df['Timestamp'] = pd.to_datetime(om_df['time'], errors='coerce')
 om_df = om_df.drop(columns=['time'])
 # print(om_df.columns)
 
 # unify dataframes
 df = pd.merge(emd_df, om_df, how='left', on='Timestamp',)
-print(df.columns)
-print(df.head())
+# print(df.columns)
+# print(df.head())
 
 # check for missing value and clean data
 # print("Null values from dataset\n", df.isnull().sum())
