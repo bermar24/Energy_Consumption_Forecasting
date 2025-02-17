@@ -1,45 +1,38 @@
 import pandas as pd
+import requests
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
 from sklearn.model_selection import train_test_split
 import matplotlib.pyplot as plt
 
-# Import DateFrame electricity_market_dataset Frankfurt
-# Electricity Market Dataset for Long-Term Forecasting (01/2018–12/2024)
-# https://www.kaggle.com/datasets/datasetengineer/electricity-market-dataset
-emd_df = pd.read_csv("Datas/electricity_market_dataset.csv")
-emd_df['Timestamp'] = pd.to_datetime(emd_df['Timestamp'], errors='coerce')
-emd_df = emd_df.drop(columns=['Renewable_Investment_Costs',
-       'Fossil_Fuel_Costs', 'Electricity_Export_Prices', 'Market_Elasticity',
-       'Subsidies', 'Energy_Production_By_Solar', 'Energy_Production_By_Wind',
-       'Energy_Production_By_Coal', 'Energy_Storage_Capacity', 'GHG_Emissions',
-       'Renewable_Penetration_Rate', 'Regulatory_Policies',
-       'Energy_Access_Data', 'LCOE', 'ROI', 'Net_Present_Value',
-       'Population_Growth', 'Optimal_Energy_Mix', 'Electricity_Price_Forecast',
-       'Project_Risk_Analysis', 'Investment_Feasibility'])
-# print(emd_df.columns)
+# Import DateFrame 22.11.2024 to 15.02.2025
+# https://www.agora-energiewende.org/data-tools/agorameter/chart/today/power_generation/01.03.2024/15.02.2025/hourly
+pgc_df = pd.read_csv("Datas/power_generation_and_consumption.csv")
+pgc_df['Timestamp'] = pd.to_datetime(pgc_df['date_id'], errors='coerce')
+pgc_df = pgc_df.drop(columns=['date_id', 'date_id.1'])
+print(pgc_df.columns)
 
-# Import DateFrame open-meteo Historical data Frankfurt (01/2018–12/2024)
+# Import DateFrame open-meteo Historical data Frankfurt (22/11/2024–15/02/2025)
 # https://open-meteo.com/en/docs#hourly=temperature_2m,precipitation_probability
-om_df = pd.read_csv("Datas/open-meteo-50.09N8.65E117m.csv")
+om_df = pd.read_csv("Datas/open-meteo-51.50N10.50E309m.csv")
 om_df['Timestamp'] = pd.to_datetime(om_df['time'], errors='coerce')
 om_df = om_df.drop(columns=['time'])
-# print(om_df.columns)
+print(om_df.columns)
 
 # unify dataframes
-df = pd.merge(emd_df, om_df, how='left', on='Timestamp',)
-# print(df.columns)
+df = pd.merge(pgc_df, om_df, how='left', on='Timestamp',)
+print(df.columns)
 # print(df.head())
 
 # check for missing value and clean data
-# print("Null values from dataset\n", df.isnull().sum())
+print("Null values from dataset\n", df.isnull().sum())
 
 # Encode categorical variables using one-hot encoding
 # df_encoded = pd.get_dummies(df, drop_first=True)
 
 # Select target variable (Total Bill) and features
-X = df.drop(columns=['GDP_Growth_Rate', 'Timestamp'])
-y = df['GDP_Growth_Rate']
+X = df.drop(columns=['Total electricity demand', 'Timestamp'])
+y = df['Total electricity demand']
 
 # Train-Test Split (80% train, 20% test)
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
@@ -65,12 +58,10 @@ predicted_value = rf_regressor.predict(single_data)
 print(f"Predicted Value: {predicted_value[0]:.2f}")
 print(f"Actual Value: {y_test.iloc[0]:.2f}")
 
-
-
 # Random Forest visualization
 
-plt.figure(figsize=(8,6))
-plt.subplot(1, 3, 3)
+plt.figure(figsize=(10,6))
+# plt.subplot(1, 3, 3)
 plt.scatter(y_test, y_pred_rf)
 plt.plot([y_test.min(), y_test.max()], [y_test.min(), y_test.max()], color='red', lw=2)
 plt.title('Random Forest: Actual vs Predicted Tip')
