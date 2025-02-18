@@ -1,12 +1,11 @@
 # pip install streamlit
 # streamlit run app.py
-
+import numpy as np
 import pandas as pd
 import requests
 import streamlit as st
 from matplotlib import pyplot as plt
 from data_loader import DataLoader
-from model import RandomForestModel
 from main import energy_forecasting
 
 # Streamlit UI
@@ -92,42 +91,40 @@ with st.expander("#### Option for weather:"):
 
 st.write("")
 if st.button('Show me!'):
-    rf_model = energy_forecasting(df)
+    st.session_state['rf_model'] = energy_forecasting(df)
 
-    # if st.button('Try forcasting'):
-    #     # try:
-    #     url = 'https://api.open-meteo.com/v1/forecast?latitude=51.5&longitude=10.5&hourly=temperature_2m,relative_humidity_2m,rain,weather_code'
-    #     response = requests.get(url)
-    #     data = response.json()
-    #     hourly_data = data["hourly"]
-    #     om_forcast = pd.DataFrame(hourly_data)
-    #
-    #     om_forcast['Timestamp'] = pd.to_datetime(om_forcast['time'], errors='coerce')
-    #     om_forcast = om_forcast.drop(columns=['time'])
-    #
-    #     # # Ensure the forecast data has the same columns as the training data
-    #     # required_columns = ['temperature_2m (°C)']
-    #     # for col in required_columns:
-    #     #     if col not in om_forcast.columns:
-    #     #         om_forcast = om_forcast.drop(columns=[col])
-    #
-    #     # Drop any columns not used in the model
-    #     # om_forcast = om_forcast[required_columns]
-    #     st.text(om_forcast.columns)
-    #     mae, mse, r2, y_pred = rf_model.evaluate(om_forcast)
-    #     # st.text(om_forcast.columns)
-    #
-    #     # predicted_value = rf_model.predict(single_data)
-    #
-    #     # except requests.exceptions.RequestException as e:
-    #     # print(f"Request error: {e}")
-    #     # except ValueError as e:
-    #     # print(f"Value error: {e}")
-    #     # except Exception as e:
-    #     # print(f"An error occurred: {e}")
-    #
-    #
-    #
-    #
-    #
+if 'rf_model' in st.session_state:
+    rf_model = st.session_state['rf_model']
+    if st.button('Try forcasting'):
+        url = 'https://api.open-meteo.com/v1/forecast?latitude=51.5&longitude=10.5&hourly=temperature_2m,relative_humidity_2m,rain,weather_code'
+        response = requests.get(url)
+        data = response.json()
+        hourly_data = data["hourly"]
+        om_forcast = pd.DataFrame(hourly_data)
+        om_forcast['Timestamp'] = pd.to_datetime(om_forcast['time'], errors='coerce')
+        om_forcast = om_forcast.drop(columns=['time'])
 
+        # Ensure the forecast data has the same columns as the training data
+        required_columns = df.columns
+        for col in required_columns:
+            if col not in om_forcast.columns:
+                om_forcast[col] = np.nan
+        forcast_df = om_forcast[required_columns].drop(columns=['Total electricity demand', 'Timestamp'])
+
+        forcast = rf_model.forcast(forcast_df)
+        om_forcast['Total electricity demand forecast'] = forcast
+        st.dataframe(om_forcast[['Timestamp', 'temperature_2m', 'Total electricity demand forecast']])
+
+        fig, ax1 = plt.subplots(figsize=(12, 6))
+        ax1.plot(om_forcast['Timestamp'], om_forcast['Total electricity demand forecast'], color='blue', label='Total electricity demand forecast')
+        ax1.set_xlabel('Timestamp')
+        ax1.set_ylabel('Total electricity demand forecast', color='blue')
+        ax1.tick_params(axis='y', labelcolor='blue')
+        # ax1.set_ylim(56, 59)
+        ax2 = ax1.twinx()
+        ax2.plot(om_forcast['Timestamp'], om_forcast['temperature_2m'], color='orange', alpha=0.6, label='temperature_2m')
+        ax2.set_ylabel('temperature_2m', color='orange')
+        ax2.tick_params(axis='y', labelcolor='orange')
+        plt.title('Total Electricity Demand Forecast Over Time')
+        fig.tight_layout()
+        st.pyplot(fig)
