@@ -1,3 +1,4 @@
+import numpy as np
 import pandas as pd
 import requests
 from sklearn.ensemble import RandomForestRegressor
@@ -59,13 +60,48 @@ print(f"Predicted Value: {predicted_value[0]:.2f}")
 print(f"Actual Value: {y_test.iloc[0]:.2f}")
 
 # Random Forest visualization
-
 plt.figure(figsize=(10,6))
-# plt.subplot(1, 3, 3)
 plt.scatter(y_test, y_pred_rf)
 plt.plot([y_test.min(), y_test.max()], [y_test.min(), y_test.max()], color='red', lw=2)
 plt.title('Random Forest: Actual vs Predicted Tip')
 plt.xlabel('Actual Tip')
 plt.ylabel('Predicted Tip')
 plt.tight_layout()
+plt.show()
+
+url = 'https://api.open-meteo.com/v1/forecast?latitude=51.5&longitude=10.5&hourly=temperature_2m,relative_humidity_2m,rain,weather_code'
+response = requests.get(url)
+data = response.json()
+hourly_data = data["hourly"]
+om_forcast = pd.DataFrame(hourly_data)
+om_forcast['Timestamp'] = pd.to_datetime(om_forcast['time'], errors='coerce')
+om_forcast = om_forcast.drop(columns=['time'])
+
+# Ensure the forecast data has the same columns as the training data
+required_columns = df.columns
+for col in required_columns:
+    if col not in om_forcast.columns:
+        om_forcast[col] = np.nan
+
+# Drop any extra columns not used in the model
+forcast_df = om_forcast[required_columns].drop(columns=['Total electricity demand', 'Timestamp'])
+
+forcast = rf_regressor.predict(forcast_df)
+print(forcast)
+om_forcast['Total electricity demand forecast'] = forcast
+print(om_forcast.columns)
+
+fig, ax1 = plt.subplots(figsize=(12, 6))
+ax1.plot(om_forcast['Timestamp'], om_forcast['Total electricity demand forecast'], color='blue',
+         label='Total electricity demand forecast')
+ax1.set_xlabel('Timestamp')
+ax1.set_ylabel('Total electricity demand forecast', color='blue')
+ax1.tick_params(axis='y', labelcolor='blue')
+# ax1.set_ylim(56, 59)
+ax2 = ax1.twinx()
+ax2.plot(om_forcast['Timestamp'], om_forcast['temperature_2m'], color='orange', alpha=0.6, label='temperature_2m')
+ax2.set_ylabel('temperature_2m', color='orange')
+ax2.tick_params(axis='y', labelcolor='orange')
+plt.title('Total Electricity Demand Forecast Over Time')
+fig.tight_layout()
 plt.show()
