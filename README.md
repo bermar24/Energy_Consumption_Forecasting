@@ -4,3 +4,8 @@ In your project, you can focus on predicting energy consumption for a specific r
 
 >[!NOTE]
 >The goal is to develop a model that can predict future energy consumption (electricity, gas, or other types of energy) based on the historical data and external factors.
+
+>[!IMPORTANT]
+># pip install streamlit
+># cd App
+># streamlit run app.py
