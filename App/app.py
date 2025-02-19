@@ -5,6 +5,8 @@ import pandas as pd
 import requests
 import streamlit as st
 from matplotlib import pyplot as plt
+from scipy.signal import dfreqresp
+
 from data_loader import DataLoader
 from main import energy_forecasting
 
@@ -23,19 +25,22 @@ data_loader = DataLoader(pgc_df='../Datas/power_generation_and_consumption.csv',
                          om_path='../Datas/open-meteo-51.50N10.50E309m.csv')
 df = data_loader.load_data()
 
+
 with st.expander('Energy Demand and Temperature Over Time'):
+    df_head = df.head()
     fig, ax1 = plt.subplots(figsize=(12, 6))
-    ax1.plot(df['Timestamp'], df['Total electricity demand'], color='blue', label='Total electricity demand')
+    ax1.plot(df_head['Timestamp'], df_head['Total electricity demand'], color='blue', label='Total electricity demand')
     ax1.set_xlabel('Timestamp')
     ax1.set_ylabel('Total electricity demand', color='blue')
     ax1.tick_params(axis='y', labelcolor='blue')
     ax2 = ax1.twinx()
-    ax2.bar(df['Timestamp'], df['temperature_2m (°C)'], color='orange', alpha=0.6, label='Temperature (°C)')
+    ax2.plot(df_head['Timestamp'], df_head['temperature_2m (°C)'], color='orange', alpha=0.6, label='Temperature (°C)')
     ax2.set_ylabel('Temperature (°C)', color='orange')
     ax2.tick_params(axis='y', labelcolor='orange')
     plt.title('Energy Demand and Temperature Over Time')
     fig.tight_layout()
     st.pyplot(fig)
+
 
 # Checkbox to show data
 st.markdown('## Do you want to try?')
@@ -112,19 +117,18 @@ if 'rf_model' in st.session_state:
         forcast_df = om_forcast[required_columns].drop(columns=['Total electricity demand', 'Timestamp'])
 
         forcast = rf_model.forcast(forcast_df)
-        om_forcast['Total electricity demand forecast'] = forcast
-        st.dataframe(om_forcast[['Timestamp', 'temperature_2m', 'Total electricity demand forecast']])
+        om_forcast['Total electricity demand forecast GWh'] = forcast
+        st.dataframe(om_forcast[['Timestamp', 'temperature_2m', 'Total electricity demand forecast GWh']])
 
         fig, ax1 = plt.subplots(figsize=(12, 6))
-        ax1.plot(om_forcast['Timestamp'], om_forcast['Total electricity demand forecast'], color='blue', label='Total electricity demand forecast')
+        ax1.plot(om_forcast['Timestamp'], om_forcast['Total electricity demand forecast GWh'], color='blue', label='Total electricity demand forecast GWh')
         ax1.set_xlabel('Timestamp')
-        ax1.set_ylabel('Total electricity demand forecast', color='blue')
+        ax1.set_ylabel('Total electricity demand forecast GWh', color='blue')
         ax1.tick_params(axis='y', labelcolor='blue')
-        # ax1.set_ylim(56, 59)
         ax2 = ax1.twinx()
         ax2.plot(om_forcast['Timestamp'], om_forcast['temperature_2m'], color='orange', alpha=0.6, label='temperature_2m')
         ax2.set_ylabel('temperature_2m', color='orange')
         ax2.tick_params(axis='y', labelcolor='orange')
-        plt.title('Total Electricity Demand Forecast Over Time')
+        plt.title('Total Electricity Demand Forecast Next Week')
         fig.tight_layout()
         st.pyplot(fig)
