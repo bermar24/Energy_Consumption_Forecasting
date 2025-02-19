@@ -9,4 +9,5 @@ Energy consumption forecasting is an important area of study in many fields, inc
 >pip install numpy pandas requests streamlit matplotlib scikit-learn
 >### Run the Streamlit App:
 >cd App
+>
 >streamlit run app.py
