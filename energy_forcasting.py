@@ -88,20 +88,19 @@ forcast_df = om_forcast[required_columns].drop(columns=['Total electricity deman
 
 forcast = rf_regressor.predict(forcast_df)
 print(forcast)
-om_forcast['Total electricity demand forecast'] = forcast
+om_forcast['Total electricity demand forecast GWh'] = forcast
 print(om_forcast.columns)
 
 fig, ax1 = plt.subplots(figsize=(12, 6))
-ax1.plot(om_forcast['Timestamp'], om_forcast['Total electricity demand forecast'], color='blue',
-         label='Total electricity demand forecast')
+ax1.plot(om_forcast['Timestamp'], om_forcast['Total electricity demand forecast GWh'], color='blue',
+         label='Total electricity demand forecast GWh')
 ax1.set_xlabel('Timestamp')
-ax1.set_ylabel('Total electricity demand forecast', color='blue')
+ax1.set_ylabel('Total electricity demand forecast GWh', color='blue')
 ax1.tick_params(axis='y', labelcolor='blue')
-# ax1.set_ylim(56, 59)
 ax2 = ax1.twinx()
 ax2.plot(om_forcast['Timestamp'], om_forcast['temperature_2m'], color='orange', alpha=0.6, label='temperature_2m')
 ax2.set_ylabel('temperature_2m', color='orange')
 ax2.tick_params(axis='y', labelcolor='orange')
-plt.title('Total Electricity Demand Forecast Over Time')
+plt.title('Total Electricity Demand Forecast Next Week')
 fig.tight_layout()
 plt.show()
